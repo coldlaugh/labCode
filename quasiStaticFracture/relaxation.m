@@ -1,12 +1,13 @@
 %% input : bond list: B, bond position X, initial position X0, top boundary list S1, lower boundary list S2,strain 
 % output: updated bond position X1,
 
-function [X] = relaxation(X,r0,B,S1,S2,W)
+function [X] = relaxation(X,B,S1,S2,lRest,W)
+
 
 ns = size(X,1);
 nb = size(B,1);
-S = setdiff([1:ns],S1,'sorted');
-S = setdiff(S,S2,'sorted'); % inside sites
+% S = setdiff([1:ns],S1,'sorted');
+% S = setdiff(S,S2,'sorted'); % inside sites
 
 Grad = zeros(size(X));
 
@@ -27,7 +28,7 @@ Grad = zeros(size(X));
 vel = zeros(size(X));
 
 % coefficients
-coeff = 0.5;
+coeff = 0.02;
 f = coeff;
 nstep = 0;
 dt = 1e-4;
@@ -50,7 +51,7 @@ while true
         dr = X(n1,:) - X(n2,:); 
         dr(1) = dr(1) - round(dr(1)/W)*W; % the vector of the bond
         r = norm(dr);  % the current bond length
-        g = (r - r0(i))/r * dr;
+        g = (r - lRest(i))/r * dr / lRest(i);  %spring constant is inverse perportional to rest length
         Grad(n1,:) = Grad(n1,:) + g;
         Grad(n2,:) = Grad(n2,:) - g;
     end
@@ -74,9 +75,9 @@ while true
         break;
     end
     
-    vf = - sum(dot(Grad,vel));
-    vv = sum(dot(vel, vel));
-    ff = sum(dot(Grad , Grad));
+    vf = - sum(sum(Grad .* vel));
+    vv = sum(sum(vel .* vel));
+    ff = sum(sum(Grad .* Grad));
     
     if vf < 0
         vel = zeros(size(vel));
