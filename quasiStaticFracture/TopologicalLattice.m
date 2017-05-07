@@ -68,7 +68,9 @@ B_broken0 = zeros(0,2); % backup B_broken
 % domain_wall = true;
 [X,B,S1,S2,S,W,H]=initLattice(50,80,show_plot,domain_wall,wall_distance);
 
-X0 = X;
+[R0] = bondLength(X0,B,W);
+
+X0 = X;  %% this line of code may be useless
 
 
 % 1.5 Add notch (vertical, in the center)

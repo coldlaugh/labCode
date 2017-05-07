@@ -1,7 +1,7 @@
 %% input : bond list: B, bond position X, initial position X0, top boundary list S1, lower boundary list S2,strain 
 % output: updated bond position X1,
 
-function [X1] = relaxation(X,X0,B,S1,S2,W)
+function [X] = relaxation(X,r0,B,S1,S2,W)
 
 ns = size(X,1);
 nb = size(B,1);
@@ -10,16 +10,17 @@ S = setdiff(S,S2,'sorted'); % inside sites
 
 Grad = zeros(size(X));
 
-% rest length
+% rest length %%% change it to a input value, so we don't have to calculate
+% it every time.
 
-r0 = zeros(nb,1);
-
-for i = 1:nb
-    n1 = B(i,1); n2 = B(i,2);
-    dr = X0(n1,:) - X0(n2,:);
-    dr(1) = dr(1) - round(dr(1)/W)*W;
-    r0(i) = norm(dr);
-end
+% r0 = zeros(nb,1);
+% 
+% for i = 1:nb
+%     n1 = B(i,1); n2 = B(i,2);
+%     dr = X0(n1,:) - X0(n2,:);
+%     dr(1) = dr(1) - round(dr(1)/W)*W;
+%     r0(i) = norm(dr);
+% end
 
 % velocity
 
@@ -30,7 +31,7 @@ coeff = 0.5;
 f = coeff;
 nstep = 0;
 dt = 1e-4;
-eps = 1e-5;
+eps = 1e-8;  % the cut off of grad magnitude
 
 while true
     
@@ -44,14 +45,14 @@ while true
     % Gradient
     
     Grad = zeros(size(Grad));
-    
     for i = 1:nb
         n1 = B(i,1); n2 = B(i,2);
-        dr = X(n1,:) - X(n2,:);
-        dr(1) = dr(1) - round(dr(1)/W)*W;
-        r = norm(dr);
-        Grad(n1,:) = Grad(n1,:) + (r - r0(i))/r * dr;
-        Grad(n2,:) = Grad(n2,:) - (r - r0(i))/r * dr;
+        dr = X(n1,:) - X(n2,:); 
+        dr(1) = dr(1) - round(dr(1)/W)*W; % the vector of the bond
+        r = norm(dr);  % the current bond length
+        g = (r - r0(i))/r * dr;
+        Grad(n1,:) = Grad(n1,:) + g;
+        Grad(n2,:) = Grad(n2,:) - g;
     end
 
     Grad(S1,:) = 0; Grad(S2,:) = 0;
@@ -73,9 +74,9 @@ while true
         break;
     end
     
-    vf = - sum(sum(Grad .* vel));
-    vv = sum(sum(vel .* vel));
-    ff = sum(sum(Grad .* Grad));
+    vf = - sum(dot(Grad,vel));
+    vv = sum(dot(vel, vel));
+    ff = sum(dot(Grad , Grad));
     
     if vf < 0
         vel = zeros(size(vel));
@@ -87,7 +88,6 @@ while true
         if nstep > 5
             dt = min([dt*1.1,5e-3]);
             f = coeff * 0.99;
-            nstep = nstep + 1;
         end
     end
     
@@ -95,6 +95,5 @@ while true
     
 end
 
-X1 = X;
 
 end
