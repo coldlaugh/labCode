@@ -1,12 +1,12 @@
-function [r] = bondLength(X,B,W)  % the length of bonds
+function [lRest] = bondLength(X,B,W)  % the length of bonds
 
-    r = zeros(size(B,1),1);
+    lRest = zeros(size(B,1),1);
     
     for i = 1: size(B,1)
         n1 = B(i,1); n2 = B(i,2);
         dr = X(n1,:) - X(n2,:);
         dr(1) = dr(1) - round(dr(1)/W)*W;
-        r(i) = norm(dr);
+        lRest(i) = norm(dr);
     end
 
 end

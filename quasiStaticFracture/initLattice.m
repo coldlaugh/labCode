@@ -1,6 +1,6 @@
 function [X,B,S1,S2,S,W,H]=initLattice(L,nstack,show_plot,domain_wall,wall_distance)
 
-
+    
     l = 2*[0.3 0.7 0.56; 0.3 0.7 0.56];  %% unit cell bond length
     theta = pi+0.2;  % angle between two triangles
     
@@ -192,12 +192,12 @@ function [X,B,S1,S2,S,W,H]=initLattice(L,nstack,show_plot,domain_wall,wall_dista
 
     % top and bottom boundary
 
-    n_top = [size(X,1)-size(layer4,1)-size(layer3,1):size(X,1)];
+    n_top = [size(X,1)-size(layer4,1)-size(layer3,1)+1:size(X,1)];
     n_bottom = [1:size(layer1,1)];
 
     % inside sites
 
-    n_in = [size(layer1,1)+1:size(X,1)-size(layer4,1)-size(layer3,1)-1];
+    n_in = [size(layer1,1)+1:size(X,1)-size(layer4,1)-size(layer3,1)];
     
 %     S1 = [1:size([layer1;layer2;layer3],1)]';
     S1 = n_bottom;
