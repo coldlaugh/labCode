@@ -20,11 +20,13 @@ label is a unique label for file output
 coder.extrinsic('sprintf')
 coder.extrinsic('initLattice')
 % coder.extrinsic('breaking_threshold')
-coder.extrinsic('break_bonds')
+% coder.extrinsic('break_bonds')
 coder.extrinsic('figure_putput')
 coder.extrinsic('stress')
 coder.extrinsic('notch')
 coder.extrinsic('mkdir')
+coder.extrinsic('tic')
+coder.extrinsic('toc')
 
 % pre assign matrices with variable shapes %%% Now I need a placeholder
 % function that create the correct dim for global variables.
@@ -35,8 +37,8 @@ coder.extrinsic('mkdir')
 % S1 = zeros(7200,1); coder.varsize('S1', [7200, 1], [1 0]);
 % S2 = zeros(7200,1); coder.varsize('S2', [7200, 1], [1 0]);
 % S = zeros(1,72000); coder.varsize('S', [1, 72000], [0 1]);
-% B_broken = B; coder.varsize('B_broken', [72000, 2], [1 0]);
-% B_broken0 = B; coder.varsize('B_broken0', [72000, 2], [1 0]);
+B_broken = zeros(7200,2); coder.varsize('B_broken', [7200, 2], [1 0]);
+B_broken0 = zeros(7200,2); coder.varsize('B_broken0', [7200, 2], [1 0]);
 % G = zeros(72000,1); coder.varsize('G', [72000, 1], [1 0]);
 
 % pre assign useful variables
@@ -89,17 +91,16 @@ X0 = X;  %% this line of code may be useless
 
 % 1.5 Add notch (vertical, in the center)
 
-%     [B] = notch(X,B,W,H,notch_length); % let's first ignore the notch
+    [B] = notch(X,B,W,H,notch_length); % let's first ignore the notch
     
 % 2. Assign random breaking threshold
 
-    [G] = breaking_threshold(0.05,0.005,B);
+    [G] = breaking_threshold(0.005,0.00,B);
 
 % 3. Loop of strain
 
-for strain = [0.00:0.001:0.2]
-    a = sprintf('strain=%f',strain);
-    a
+for strain = [0.035:0.0005:0.2]
+
 %     strain
     snapshot = snapshot + 1;
 
@@ -107,18 +108,29 @@ for strain = [0.00:0.001:0.2]
 
     flag_relaxation = true;
     B_broken0 = B_broken;
+    numBreak = 0;
     while flag_relaxation 
 		for i = [1:numel(S2)]
 			j = S2(i);
         	X(j,2) = X0(j,2) + H * strain;
         end
-        
+        tic
         [X] = relaxation(X,B,S1,S2,lRest,W); % relaxation of position X, global variable in this function
-
+        toc
 
 % 5. Breaking of bonds
     
-        [B,B_broken,G,flag_relaxation] = break_bonds(X,X0,B,B_broken,S,G,W);
+        [B,B_broken,flag_relaxation] = break_bonds(X,lRest,B,B_broken,S,G,W);
+        
+        if flag_relaxation
+            numBreak = numBreak + 1;
+        end
+        
+        if numBreak > 10  % if break more than 10 bonds, consider it as peak
+            return
+        end
+            
+        a = sprintf('strain=%f',strain); a  % print strain to console
     end
     
 

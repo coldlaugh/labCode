@@ -48,12 +48,14 @@ while true
     Grad = zeros(size(Grad));
     for i = 1:nb
         n1 = B(i,1); n2 = B(i,2);
-        dr = X(n1,:) - X(n2,:); 
-        dr(1) = dr(1) - round(dr(1)/W)*W; % the vector of the bond
-        r = norm(dr);  % the current bond length
-        g = (r - lRest(i))/r * dr / lRest(i);  %spring constant is inverse perportional to rest length
-        Grad(n1,:) = Grad(n1,:) + g;
-        Grad(n2,:) = Grad(n2,:) - g;
+        if n1 >= 0 && n2 >= 0
+            dr = X(n1,:) - X(n2,:); 
+            dr(1) = dr(1) - round(dr(1)/W)*W; % the vector of the bond
+            r = norm(dr);  % the current bond length
+            g = (r - lRest(i))/r * dr / lRest(i);  %spring constant is inverse perportional to rest length
+            Grad(n1,:) = Grad(n1,:) + g;
+            Grad(n2,:) = Grad(n2,:) - g;
+        end
     end
 
     Grad(S1,:) = 0; Grad(S2,:) = 0;
