@@ -1,0 +1,1 @@
+ffmpeg -i fig%d.png -c:v libx264 -pix_fmt yuv420p -vf 'scale=1066:800' -framerate 10 L64kappa1e-1ForceChain.mp4
